@@ -365,7 +365,12 @@ namespace Plugin.PushNotification
                 resultIntent.SetFlags(PushNotificationManager.NotificationActivityFlags.Value);
             }
             var requestCode = new Java.Util.Random().NextInt();
-            var pendingIntent = PendingIntent.GetActivity(context, requestCode, resultIntent, PendingIntentFlags.UpdateCurrent);
+
+            PendingIntentFlags flag = PendingIntentFlags.UpdateCurrent;
+            if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.M)
+                flag |= PendingIntentFlags.Immutable;
+
+            var pendingIntent = PendingIntent.GetActivity(context, requestCode, resultIntent, flag);
 
             if (parameters.TryGetValue(ChannelIdKey, out var channelId) && channelId != null)
             {
@@ -398,7 +403,7 @@ namespace Plugin.PushNotification
 
             if (parameters.TryGetValue(FullScreenIntentKey, out var fullScreenIntent) && ($"{fullScreenIntent}" == "true" || $"{fullScreenIntent}" == "1"))
             {
-                var fullScreenPendingIntent = PendingIntent.GetActivity(context, requestCode, resultIntent, PendingIntentFlags.UpdateCurrent);
+                var fullScreenPendingIntent = PendingIntent.GetActivity(context, requestCode, resultIntent, flag);
                 notificationBuilder.SetFullScreenIntent(fullScreenPendingIntent, true);
                 notificationBuilder.SetCategory(NotificationCompat.CategoryCall);
                 parameters[PriorityKey] = "high";
@@ -406,7 +411,7 @@ namespace Plugin.PushNotification
 
             var deleteIntent = new Intent(context, typeof(PushNotificationDeletedReceiver));
             deleteIntent.PutExtras(extras);
-            var pendingDeleteIntent = PendingIntent.GetBroadcast(context, requestCode, deleteIntent, PendingIntentFlags.UpdateCurrent);
+            var pendingDeleteIntent = PendingIntent.GetBroadcast(context, requestCode, deleteIntent, flag);
             notificationBuilder.SetDeleteIntent(pendingDeleteIntent);
 
             if (Build.VERSION.SdkInt < BuildVersionCodes.O)
